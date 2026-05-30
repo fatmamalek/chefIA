@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefIA — Générateur de Recettes par IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #FDF8F0;
+    --warm: #F5EDD8;
+    --gold: #C8922A;
+    --gold-dark: #8B6419;
+    --green: #2D5016;
+    --green-light: #4A7C23;
+    --text: #1A1208;
+    --text-muted: #6B5B3E;
+    --border: #E8D9BC;
+    --white: #FFFFFF;
+    --red: #C0392B;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--green);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(200,146,42,0.15);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--warm);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--gold); font-style: italic; }
+  .tagline {
+    font-size: 0.85rem;
+    color: rgba(245,237,216,0.7);
+    font-weight: 300;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  /* INPUT SECTION */
+  .input-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 24px rgba(26,18,8,0.06);
+  }
+  .input-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--green);
+    margin-bottom: 0.4rem;
+  }
+  .input-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .ingredient-input-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  #ingredient-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: var(--cream);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #ingredient-input:focus { border-color: var(--gold); }
+  #ingredient-input::placeholder { color: var(--text-muted); }
+
+  .btn-add {
+    padding: 0.75rem 1.25rem;
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: var(--gold-dark); }
+  .btn-add:active { transform: scale(0.97); }
+
+  /* TAGS */
+  #tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 36px;
+    margin-bottom: 1.5rem;
+  }
+  .tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--warm);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.88rem;
+    color: var(--green);
+    font-weight: 500;
+    animation: pop 0.2s ease;
+  }
+  @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .tag-remove {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .tag-remove:hover { color: var(--red); }
+
+  /* OPTIONS */
+  .options-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .option-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+  }
+  .option-group select {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    background: var(--cream);
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .option-group select:focus { border-color: var(--gold); }
+
+  .btn-generate {
+    width: 100%;
+    padding: 1rem;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn-generate:hover { background: var(--green-light); }
+  .btn-generate:active { transform: scale(0.99); }
+  .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* LOADING */
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 3rem;
+  }
+  .chef-spinner {
+    font-size: 3rem;
+    display: block;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  #loading p { color: var(--text-muted); font-style: italic; }
+
+  /* RECIPE OUTPUT */
+  #recipe-output {
+    display: none;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(26,18,8,0.06);
+    animation: fadeUp 0.5s ease;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .recipe-header {
+    background: var(--green);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .recipe-header::before {
+    content: '🍽️';
+    position: absolute;
+    right: 1.5rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 4rem;
+    opacity: 0.2;
+  }
+  .recipe-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--warm);
+    margin-bottom: 0.5rem;
+  }
+  .recipe-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    font-size: 0.85rem;
+    color: rgba(245,237,216,0.75);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .recipe-body { padding: 2rem; }
+
+  .recipe-section { margin-bottom: 2rem; }
+  .recipe-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--green);
+    border-bottom: 2px solid var(--warm);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .ingredients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+  }
+  .ingredient-item {
+    background: var(--warm);
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ingredient-item::before { content: '•'; color: var(--gold); font-weight: bold; }
+
+  .steps-list { list-style: none; }
+  .step-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+  }
+  .step-num {
+    min-width: 32px; height: 32px;
+    background: var(--gold);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-text { font-size: 0.95rem; line-height: 1.7; color: var(--text); }
+
+  .tip-box {
+    background: linear-gradient(135deg, #FFF8EC, #FEF3DC);
+    border: 1px solid #E8C97A;
+    border-left: 4px solid var(--gold);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    color: var(--gold-dark);
+    line-height: 1.7;
+  }
+
+  .btn-new {
+    display: block;
+    width: calc(100% - 4rem);
+    margin: 0 2rem 2rem;
+    padding: 0.85rem;
+    background: transparent;
+    border: 1.5px solid var(--green);
+    border-radius: 10px;
+    color: var(--green);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .btn-new:hover { background: var(--green); color: var(--white); }
+
+  /* ERROR */
+  #error-box {
+    display: none;
+    background: #FFF0EF;
+    border: 1px solid #FFC5C2;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    color: var(--red);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 600px) {
+    .options-row { grid-template-columns: 1fr; }
+    .recipe-header h1 { font-size: 1.4rem; }
+    main { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Chef<span>IA</span></div>
+    <div class="tagline">Votre chef cuisinier propulsé par l'intelligence artificielle</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="input-card">
+    <h2>🥕 Vos ingrédients disponibles</h2>
+    <p>Entrez ce que vous avez dans votre frigo et laissez l'IA créer une recette pour vous !</p>
+
+    <div class="ingredient-input-row">
+      <input type="text" id="ingredient-input" placeholder="Ex: poulet, tomates, ail..." />
+      <button class="btn-add" onclick="addIngredient()">+ Ajouter</button>
+    </div>
+
+    <div id="tags-container"></div>
+
+    <div class="options-row">
+      <div class="option-group">
+        <label>Type de cuisine</label>
+        <select id="cuisine-type">
+          <option value="française">Française</option>
+          <option value="italienne">Italienne</option>
+          <option value="asiatique">Asiatique</option>
+          <option value="méditerranéenne">Méditerranéenne</option>
+          <option value="maghrébine">Maghrébine</option>
+          <option value="internationale">Internationale</option>
+        </select>
+      </div>
+      <div class="option-group">
+        <label>Temps de préparation</label>
+        <select id="prep-time">
+          <option value="rapide (moins de 20 minutes)">Rapide (&lt; 20 min)</option>
+          <option value="normal (20 à 45 minutes)">Normal (20-45 min)</option>
+          <option value="long (plus d'une heure)">Long (&gt; 1h)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="error-box"></div>
+
+    <button class="btn-generate" id="generate-btn" onclick="generateRecipe()">
+      ✨ Générer ma recette avec l'IA
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading">
+    <span class="chef-spinner">👨‍🍳</span>
+    <p>L'IA prépare votre recette personnalisée...</p>
+  </div>
+
+  <!-- RECIPE OUTPUT -->
+  <div id="recipe-output">
+    <div class="recipe-header">
+      <h1 id="recipe-title">Titre de la recette</h1>
+      <div class="recipe-meta">
+        <span class="meta-item">⏱ <span id="recipe-time"></span></span>
+        <span class="meta-item">👥 <span id="recipe-servings"></span></span>
+        <span class="meta-item">📊 <span id="recipe-difficulty"></span></span>
+      </div>
+    </div>
+
+    <div class="recipe-body">
+      <div class="recipe-section">
+        <h3>🛒 Ingrédients</h3>
+        <div class="ingredients-grid" id="ingredients-list"></div>
+      </div>
+
+      <div class="recipe-section">
+        <h3>👨‍🍳 Étapes de préparation</h3>
+        <ol class="steps-list" id="steps-list"></ol>
+      </div>
+
+      <div class="recipe-section">
+        <h3>💡 Conseil du chef</h3>
+        <div class="tip-box" id="chef-tip"></div>
+      </div>
+    </div>
+
+    <button class="btn-new" onclick="resetApp()">🔄 Générer une autre recette</button>
+  </div>
+
+</main>
+
+<footer>
+  ChefIA — Générateur de recettes par Intelligence Artificielle · Propulsé par Claude (Anthropic)
+</footer>
+
+<script>
+let ingredients = [];
+
+function addIngredient() {
+  const input = document.getElementById('ingredient-input');
+  const val = input.value.trim().toLowerCase();
+  if (!val) return;
+  if (ingredients.includes(val)) { input.value = ''; return; }
+  ingredients.push(val);
+  renderTags();
+  input.value = '';
+  input.focus();
+}
+
+document.getElementById('ingredient-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') addIngredient();
+});
+
+function removeIngredient(i) {
+  ingredients.splice(i, 1);
+  renderTags();
+}
+
+function renderTags() {
+  const container = document.getElementById('tags-container');
+  container.innerHTML = ingredients.map((ing, i) =>
+    `<div class="tag">🥬 ${ing} <span class="tag-remove" onclick="removeIngredient(${i})">×</span></div>`
+  ).join('');
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.style.display = 'block';
+  box.textContent = '⚠️ ' + msg;
+}
+
+function hideError() {
+  document.getElementById('error-box').style.display = 'none';
+}
+
+async function generateRecipe() {
+  hideError();
+
+  if (ingredients.length === 0) {
+    showError('Veuillez ajouter au moins un ingrédient avant de générer une recette.');
+    return;
+  }
+
+  const cuisine = document.getElementById('cuisine-type').value;
+  const time = document.getElementById('prep-time').value;
+  const btn = document.getElementById('generate-btn');
+
+  btn.disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('recipe-output').style.display = 'none';
+
+  const prompt = `Tu es un chef cuisinier expert. Génère une recette créative et délicieuse en cuisine ${cuisine}, 
+avec un temps de préparation ${time}, en utilisant ces ingrédients : ${ingredients.join(', ')}.
+
+Réponds UNIQUEMENT avec un JSON valide (sans markdown, sans backticks, sans explication), au format exact suivant :
+{
+  "title": "Nom de la recette",
+  "time": "durée totale",
+  "servings": "nombre de personnes",
+  "difficulty": "Facile / Moyen / Difficile",
+  "ingredients": ["ingrédient 1 avec quantité", "ingrédient 2 avec quantité"],
+  "steps": ["Étape 1...", "Étape 2...", "Étape 3..."],
+  "tip": "Conseil du chef"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(i => i.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const recipe = JSON.parse(clean);
+
+    displayRecipe(recipe);
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    btn.disabled = false;
+    showError('Erreur lors de la génération. Veuillez réessayer.');
+    console.error(err);
+  }
+}
+
+function displayRecipe(recipe) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('generate-btn').disabled = false;
+
+  document.getElementById('recipe-title').textContent = recipe.title || 'Ma recette';
+  document.getElementById('recipe-time').textContent = recipe.time || '';
+  document.getElementById('recipe-servings').textContent = recipe.servings || '';
+  document.getElementById('recipe-difficulty').textContent = recipe.difficulty || '';
+
+  const ingList = document.getElementById('ingredients-list');
+  ingList.innerHTML = (recipe.ingredients || []).map(ing =>
+    `<div class="ingredient-item">${ing}</div>`
+  ).join('');
+
+  const stepsList = document.getElementById('steps-list');
+  stepsList.innerHTML = (recipe.steps || []).map((step, i) =>
+    `<li class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${step}</div>
+    </li>`
+  ).join('');
+
+  document.getElementById('chef-tip').textContent = recipe.tip || '';
+
+  document.getElementById('recipe-output').style.display = 'block';
+  document.getElementById('recipe-output').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetApp() {
+  document.getElementById('recipe-output').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
