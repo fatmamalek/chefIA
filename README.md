@@ -94,7 +94,7 @@ chefIA/
 
 ## 🎬 Démonstration vidéo
 
-[Voir la démonstration interactive](https://fatmamalek.github.io/chefIA/demo.html)
+ [Voir la démonstration interactive](https://fatmamalek.github.io/chefIA/demo.html)
 
 ## 📝 Consignes du projet respectées
 
