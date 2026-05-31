@@ -45,10 +45,9 @@ L'utilisateur entre les ingrédients qu'il a à disposition, choisit un type de 
 ## 📸 Captures d'écran
 
 ### Interface principale
-![Interface principale](screenshots/screen1.png)
-
+![Interface principale](screen1.png)
 ### Résultat généré par l'IA
-![Recette générée](screenshots/screen2.png)
+![Recette générée](screen2.png)
 
 ---
 
