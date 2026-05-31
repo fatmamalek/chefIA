@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefIA — Démonstration</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#FDF8F0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+.screen{max-width:660px;width:100%}
+.header{background:#2D5016;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1rem}
+.logo{font-size:1.6rem;font-weight:700;color:#F5EDD8;font-family:'Playfair Display',serif}
+.logo span{color:#C8922A;font-style:italic}
+.tagline{font-size:0.8rem;color:rgba(245,237,216,0.65)}
+.card{background:#fff;border:1px solid #E8D9BC;border-radius:16px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(26,18,8,0.05)}
+.label{font-size:0.72rem;font-weight:500;color:#6B5B3E;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.35rem}
+.inp{width:100%;padding:0.6rem 0.85rem;border:1px solid #E8D9BC;border-radius:10px;font-size:0.88rem;background:#FDF8F0;color:#1A1208;font-family:'DM Sans',sans-serif}
+.tag{display:inline-flex;align-items:center;gap:5px;background:#F5EDD8;border:1px solid #E8D9BC;border-radius:20px;padding:0.28rem 0.7rem;font-size:0.8rem;color:#2D5016;font-weight:500;margin:0.2rem;opacity:0;transition:opacity 0.4s}
+.tag.show{opacity:1}
+.btn-gen{width:100%;padding:0.85rem;background:#2D5016;color:white;border:none;border-radius:10px;font-family:'Playfair Display',serif;font-size:0.95rem;font-style:italic;font-weight:700;margin-top:0.75rem;cursor:default}
+.recipe-header{background:#2D5016;border-radius:16px 16px 0 0;padding:1.25rem 1.5rem}
+.recipe-title{font-size:1.15rem;font-weight:700;color:#F5EDD8;margin-bottom:0.4rem;font-family:'Playfair Display',serif}
+.recipe-meta span{font-size:0.78rem;color:rgba(245,237,216,0.75);margin-right:1rem}
+.recipe-body{background:#fff;border:1px solid #E8D9BC;border-radius:0 0 16px 16px;padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:0.9rem;font-weight:500;color:#2D5016;border-bottom:2px solid #F5EDD8;padding-bottom:0.35rem;margin-bottom:0.75rem;font-family:'Playfair Display',serif}
+.ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.35rem;margin-bottom:1.25rem}
+.ing-item{background:#F5EDD8;border-radius:8px;padding:0.38rem 0.7rem;font-size:0.8rem;color:#1A1208;opacity:0;transform:translateY(8px);transition:all 0.3s}
+.ing-item.show{opacity:1;transform:translateY(0)}
+.step{display:flex;gap:0.65rem;margin-bottom:0.75rem;align-items:flex-start;opacity:0;transform:translateX(-8px);transition:all 0.4s}
+.step.show{opacity:1;transform:translateX(0)}
+.step-num{min-width:26px;height:26px;background:#C8922A;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;flex-shrink:0;margin-top:2px}
+.step-text{font-size:0.83rem;line-height:1.7;color:#1A1208}
+.tip{background:#FFF8EC;border-left:3px solid #C8922A;padding:0.75rem 1rem;font-size:0.83rem;color:#8B6419;line-height:1.7;opacity:0;transition:opacity 0.5s}
+.tip.show{opacity:1}
+.cursor{display:inline-block;width:2px;height:1em;background:#1A1208;vertical-align:middle;animation:blink 0.7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.loading{text-align:center;padding:1.5rem;display:none;background:#fff;border:1px solid #E8D9BC;border-radius:16px;margin-bottom:1rem}
+.spin{font-size:2rem;display:inline-block}
+.progress{height:4px;background:#F5EDD8;border-radius:2px;margin-top:0.75rem;overflow:hidden}
+.progress-bar{height:100%;background:#2D5016;width:0;transition:width 0.1s linear}
+.step-indicator{font-size:0.75rem;color:#6B5B3E;margin-bottom:0.5rem}
+.replay-btn{display:block;width:100%;padding:0.7rem;background:transparent;border:1px solid #2D5016;border-radius:10px;color:#2D5016;font-size:0.85rem;cursor:pointer;text-align:center;margin-top:0.5rem;opacity:0;transition:opacity 0.5s;font-family:'DM Sans',sans-serif}
+.replay-btn.show{opacity:1}
+.footer{text-align:center;margin-top:0.5rem;padding:0.5rem;background:#F5EDD8;border-radius:8px;width:100%;max-width:660px}
+.footer span{font-size:0.72rem;color:#6B5B3E}
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="header">
+    <div class="logo">Chef<span>IA</span></div>
+    <div class="tagline">Votre chef cuisinier propulsé par l'IA</div>
+  </div>
+
+  <div id="phase-input" class="card">
+    <div style="font-size:0.95rem;font-weight:500;color:#1A1208;margin-bottom:0.25rem">Vos ingrédients disponibles</div>
+    <div style="font-size:0.82rem;color:#6B5B3E;margin-bottom:1rem">Entrez ce que vous avez et laissez l'IA créer une recette !</div>
+    <div class="inp" id="typing-box">Ex: poulet, tomates, ail...<span class="cursor"></span></div>
+    <div id="tags-area" style="margin:0.75rem 0;min-height:32px">
+      <span class="tag" id="t1">🥬 poulet</span>
+      <span class="tag" id="t2">🥬 tomates</span>
+      <span class="tag" id="t3">🥬 ail</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+      <div><div class="label">Type de cuisine</div><div class="inp">Française</div></div>
+      <div><div class="label">Temps</div><div class="inp">Normal (20-45 min)</div></div>
+    </div>
+    <div class="btn-gen" id="gen-btn">✨ Générer ma recette avec l'IA</div>
+  </div>
+
+  <div id="phase-loading" class="loading">
+    <div class="step-indicator" id="load-text">L'IA analyse vos ingrédients...</div>
+    <div class="spin" id="spin-emoji">👨‍🍳</div>
+    <div class="progress"><div class="progress-bar" id="pbar"></div></div>
+  </div>
+
+  <div id="phase-recipe" style="display:none">
+    <div class="recipe-header">
+      <div class="recipe-title">🍗 Poulet Provençal à l'Ail et aux Tomates</div>
+      <div class="recipe-meta">
+        <span>⏱ 35 minutes</span>
+        <span>👥 4 personnes</span>
+        <span>📊 Facile</span>
+      </div>
+    </div>
+    <div class="recipe-body">
+      <div class="section-title">🛒 Ingrédients</div>
+      <div class="ing-grid">
+        <div class="ing-item" id="i1">• 4 cuisses de poulet</div>
+        <div class="ing-item" id="i2">• 4 tomates mûres</div>
+        <div class="ing-item" id="i3">• 6 gousses d'ail</div>
+        <div class="ing-item" id="i4">• 2 c.s. huile d'olive</div>
+        <div class="ing-item" id="i5">• Thym, laurier</div>
+        <div class="ing-item" id="i6">• Sel, poivre</div>
+        <div class="ing-item" id="i7">• 100ml bouillon poulet</div>
+        <div class="ing-item" id="i8">• Persil frais</div>
+      </div>
+      <div class="section-title">👨‍🍳 Étapes de préparation</div>
+      <div class="step" id="s1"><div class="step-num">1</div><div class="step-text">Salez et poivrez les cuisses de poulet. Épluchez et écrasez les gousses d'ail.</div></div>
+      <div class="step" id="s2"><div class="step-num">2</div><div class="step-text">Faites dorer le poulet dans l'huile d'olive 5 min de chaque côté à feu moyen-vif.</div></div>
+      <div class="step" id="s3"><div class="step-num">3</div><div class="step-text">Ajoutez l'ail, les tomates en quartiers, le thym et le laurier. Mélangez bien.</div></div>
+      <div class="step" id="s4"><div class="step-num">4</div><div class="step-text">Versez le bouillon, couvrez et laissez mijoter 20 minutes à feu doux.</div></div>
+      <div class="step" id="s5"><div class="step-num">5</div><div class="step-text">Parsemez de persil frais et servez avec du riz basmati ou des pommes de terre vapeur.</div></div>
+      <div class="section-title" style="margin-top:1rem">💡 Conseil du chef</div>
+      <div class="tip" id="tip-box">Ajoutez un verre de vin blanc sec avec le bouillon pour une version encore plus authentiquement provençale !</div>
+    </div>
+    <button class="replay-btn" id="replay-btn" onclick="startDemo()">🔄 Rejouer la démonstration</button>
+  </div>
+</div>
+
+<div class="footer">
+  <span>✨ ChefIA — Démonstration — Propulsé par Claude (Anthropic)</span>
+</div>
+
+<script>
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+async function typeText(el,texts,placeholder){
+  el.innerHTML=placeholder+'<span class="cursor"></span>';
+  await delay(500);
+  for(let t of texts){el.innerHTML=t+'<span class="cursor"></span>';await delay(110);}
+}
+async function startDemo(){
+  document.getElementById('phase-input').style.display='block';
+  document.getElementById('phase-loading').style.display='none';
+  document.getElementById('phase-recipe').style.display='none';
+  document.getElementById('replay-btn').classList.remove('show');
+  ['t1','t2','t3'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  ['i1','i2','i3','i4','i5','i6','i7','i8'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  ['s1','s2','s3','s4','s5'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('tip-box').classList.remove('show');
+  document.getElementById('pbar').style.width='0';
+  const box=document.getElementById('typing-box');
+  await delay(800);
+  await typeText(box,['p','po','pou','poul','poule','poulet'],'Ex: poulet...');
+  await delay(200);document.getElementById('t1').classList.add('show');
+  box.innerHTML='Ex: poulet, tomates, ail...<span class="cursor"></span>';
+  await delay(600);
+  await typeText(box,['t','to','tom','toma','tomat','tomate','tomates'],'Ex: tomates...');
+  await delay(200);document.getElementById('t2').classList.add('show');
+  box.innerHTML='Ex: poulet, tomates, ail...<span class="cursor"></span>';
+  await delay(600);
+  await typeText(box,['a','ai','ail'],'Ex: ail...');
+  await delay(200);document.getElementById('t3').classList.add('show');
+  box.innerHTML='Ex: poulet, tomates, ail...<span class="cursor"></span>';
+  await delay(800);
+  document.getElementById('gen-btn').style.background='#4A7C23';
+  await delay(300);
+  document.getElementById('gen-btn').style.background='#2D5016';
+  await delay(400);
+  document.getElementById('phase-input').style.display='none';
+  document.getElementById('phase-loading').style.display='block';
+  const loadTexts=["L'IA analyse vos ingrédients...",'Création de la recette...','Ajout des étapes...','Finalisation...'];
+  const pbar=document.getElementById('pbar');
+  const spin=document.getElementById('spin-emoji');
+  const loadText=document.getElementById('load-text');
+  let angle=0;
+  const si=setInterval(()=>{angle+=15;spin.style.transform=`rotate(${angle}deg)`;},60);
+  for(let i=0;i<100;i++){
+    pbar.style.width=i+'%';
+    if(i===25)loadText.textContent=loadTexts[1];
+    if(i===50)loadText.textContent=loadTexts[2];
+    if(i===75)loadText.textContent=loadTexts[3];
+    await delay(30);
+  }
+  clearInterval(si);
+  document.getElementById('phase-loading').style.display='none';
+  document.getElementById('phase-recipe').style.display='block';
+  for(let i=1;i<=8;i++){document.getElementById('i'+i).classList.add('show');await delay(120);}
+  await delay(300);
+  for(let i=1;i<=5;i++){document.getElementById('s'+i).classList.add('show');await delay(250);}
+  await delay(400);
+  document.getElementById('tip-box').classList.add('show');
+  await delay(500);
+  document.getElementById('replay-btn').classList.add('show');
+}
+startDemo();
+</script>
+</body>
+</html>
