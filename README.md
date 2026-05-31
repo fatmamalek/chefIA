@@ -1,6 +1,6 @@
 # 🍽️ ChefIA — Générateur de Recettes par Intelligence Artificielle
 
-> Une application web qui génère des recettes personnalisées à partir de vos ingrédients disponibles, propulsée par le modèle génératif **Claude (Anthropic)**.
+> Une application web qui génère des recettes personnalisées à partir de vos ingrédients disponibles, propulsée par le modèle génératif LLM
 
 ---
 
